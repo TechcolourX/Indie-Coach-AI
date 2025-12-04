@@ -1,9 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-// Fix: Removed 'Role' from this import as it's not exported by the library.
 import { GoogleGenAI, Part, Content } from '@google/genai';
-import { SYSTEM_INSTRUCTION } from '../constants.tsx'; // Adjust path as needed
-// Fix: Added 'Role' to this import, as it is defined in the local types file.
-import { type Message, type AppPart, Role } from '../types.ts'; // Adjust path as needed
+import { SYSTEM_INSTRUCTION } from '../core/prompts.ts';
+import { type Message, type AppPart, Role } from '../types.ts';
 
 // Helper to convert internal AppPart[] to SDK-compatible Part[]
 const appPartsToApiParts = (parts: AppPart[]): Part[] => {
@@ -28,8 +26,8 @@ const appMessagesToApiContents = (messages: Message[]): Content[] => {
         }
     });
     
-    // Ensure the last message is from the user
-    if(filteredMessages[filteredMessages.length-1].role !== Role.User){
+    // Ensure the last message is from the user. Add a length check to prevent crashing.
+    if(filteredMessages.length > 0 && filteredMessages[filteredMessages.length-1].role !== Role.User){
         filteredMessages.pop();
     }
 
@@ -59,6 +57,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const ai = new GoogleGenAI({ apiKey });
     const contents = appMessagesToApiContents(messages);
+    
+    // Do not call the API if there's no valid content to send
+    if (contents.length === 0) {
+        return res.status(400).json({ error: 'Cannot process empty or invalid message history.'});
+    }
 
     const stream = await ai.models.generateContentStream({
         model: 'gemini-2.5-flash',
