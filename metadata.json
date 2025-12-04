@@ -1,0 +1,7 @@
+{
+  "name": "Indie Coach",
+  "description": "",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Merch Muse AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lato:wght@400;700&family=Montserrat:wght@400;700&family=Oswald:wght@700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+      :root {
+        --background: #FFFFFF; 
+        --foreground: #111827;
+        --foreground-muted: #6B7280; /* For placeholder text */
+        --surface: #F9FAFB;
+        --surface-border: #E5E7EB;
+        --brand-orange: #FF6A00;
+        --brand-orange-dark-accessible: #C25A00;
+        --brand-purple: #7C3AED;
+        --brand-purple-hover: #6D28D9;
+        --brand-navy: #1E3A8A; /* Modern, solid navy for buttons */
+        --brand-navy-hover: #1E40AF; /* Lighter navy for hover */
+        --brand-title-gradient: linear-gradient(to right, var(--brand-orange), var(--brand-purple));
+      }
+      .dark {
+        --background: #111827;
+        --foreground: #F9FAFB;
+        --foreground-muted: #9CA3AF; /* For placeholder text */
+        --surface: #1F2937;
+        --surface-border: #374151;
+        --brand-navy: #3B82F6; /* Brighter blue for dark mode */
+        --brand-navy-hover: #60A5FA;
+        --brand-title-gradient: linear-gradient(to right, #fb923c, #a78bfa);
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--background);
+        color: var(--foreground);
+      }
+      .bg-background { background-color: var(--background); }
+      .text-foreground { color: var(--foreground); }
+      .bg-surface { background-color: var(--surface); }
+      .border-surface-border { border-color: var(--surface-border); }
+      .bg-brand-orange { background-color: var(--brand-orange); }
+      .bg-brand-orange-dark-accessible { background-color: var(--brand-orange-dark-accessible); }
+      .border-brand-orange { border-color: var(--brand-orange); }
+      .bg-brand-purple { background-color: var(--brand-purple); }
+      .hover\\:bg-brand-purple-hover:hover { background-color: var(--brand-purple-hover); }
+      .placeholder-color::placeholder { color: var(--foreground-muted); }
+      .dark .placeholder-color::placeholder { color: var(--foreground-muted); }
+      .bg-foreground { background-color: var(--foreground); }
+      .text-background { color: var(--background); }
+
+      /* Accessible CTA Button */
+      .brand-cta {
+        background-color: var(--brand-navy);
+        color: #FFFFFF;
+        transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        transform: scale(1);
+      }
+      .brand-cta:hover {
+        background-color: var(--brand-navy-hover);
+        transform: scale(1.03);
+      }
+      .brand-cta:disabled {
+        background-image: none !important;
+        background-color: #D1D5DB !important; /* gray-300 */
+        cursor: not-allowed !important;
+        box-shadow: none !important;
+        transform: none !important;
+        filter: none !important;
+      }
+      .dark .brand-cta:disabled {
+        background-color: #4B5563 !important; /* gray-600 */
+      }
+
+      /* Global Focus Styles for Accessibility */
+      *:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px var(--background), 0 0 0 5px var(--brand-purple);
+      }
+      .dark *:focus-visible {
+         box-shadow: 0 0 0 3px var(--background), 0 0 0 5px var(--brand-purple);
+      }
+      
+      /* Error state focus ring */
+      .input-error:focus-visible {
+        box-shadow: 0 0 0 3px var(--background), 0 0 0 5px #EF4444; /* red-500 */
+      }
+      .dark .input-error:focus-visible {
+        box-shadow: 0 0 0 3px var(--background), 0 0 0 5px #F87171; /* red-400 */
+      }
+
+      @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      .animate-fade-in {
+        animation: fade-in 0.3s ease-out forwards;
+      }
+      @keyframes fade-in-up {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade-in-up {
+        animation: fade-in-up 0.4s ease-out forwards;
+      }
+
+      @keyframes blink {
+        50% { opacity: 0; }
+      }
+      .blinking-cursor {
+        display: inline-block;
+        width: 8px;
+        height: 1.2em;
+        background-color: var(--foreground);
+        animation: blink 1s step-end infinite;
+        vertical-align: bottom;
+        margin-left: 2px;
+      }
+      
+      @keyframes pulse-ring {
+        0% { box-shadow: 0 0 0 0 rgba(255, 106, 0, 0.7); }
+        100% { box-shadow: 0 0 0 10px rgba(255, 106, 0, 0); }
+      }
+      .recording-indicator {
+        animation: pulse-ring 1.5s infinite;
+      }
+
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^18.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^18.2.0/",
+    "react/": "https://aistudiocdn.com/react@^18.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="antialiased font-sans">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
