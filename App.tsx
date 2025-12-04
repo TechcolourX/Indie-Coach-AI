@@ -20,12 +20,13 @@ import BookSummaryCard from './components/BookSummaryCard.tsx';
 
 const RECOVERY_SESSION_KEY = 'indie-coach-recovery-data';
 
-// Helper function to get the API key safely, preventing a startup ReferenceError.
+// Helper function to get the API key from Vite's environment variables.
 const getApiKey = (): string => {
-  if (typeof process === 'undefined' || !process.env || !process.env.API_KEY) {
-    throw new Error("[GoogleGenerativeAI Error]: API key not found. Please check your environment configuration.");
+  const apiKey = import.meta.env.VITE_API_KEY;
+  if (!apiKey) {
+    throw new Error("[GoogleGenerativeAI Error]: API key not found. Please set VITE_API_KEY in your environment configuration.");
   }
-  return process.env.API_KEY;
+  return apiKey;
 };
 
 // Helper function to convert a File to a Base64 string

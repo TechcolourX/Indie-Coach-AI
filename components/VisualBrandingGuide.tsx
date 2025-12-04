@@ -104,9 +104,9 @@ const VisualBrandingGuide: React.FC<VisualBrandingGuideProps> = ({ data }) => {
     `;
 
     try {
-        const apiKey = process.env.API_KEY;
+        const apiKey = import.meta.env.VITE_API_KEY;
         if (!apiKey) {
-            throw new Error("API key not found.");
+            throw new Error("API key not found. Please set VITE_API_KEY in your environment.");
         }
         const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
