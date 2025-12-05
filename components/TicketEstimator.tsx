@@ -1,4 +1,4 @@
-import React, { useState, useMemo, ChangeEvent } from 'react';
+import React, { useState, useMemo, ChangeEvent, useDeferredValue } from 'react';
 
 interface TicketEstimatorData {
   defaults: {
@@ -28,38 +28,59 @@ const formatCurrency = (value: number) => {
 
 const TicketEstimator: React.FC<TicketEstimatorProps> = ({ data }) => {
   const { defaults } = data;
-  const [ticketPrice, setTicketPrice] = useState(defaults.ticketPrice);
-  const [venueCapacity, setVenueCapacity] = useState(defaults.venueCapacity);
-  const [sellThroughRate, setSellThroughRate] = useState(defaults.sellThroughRate);
-  const [merchSpendPerGuest, setMerchSpendPerGuest] = useState(defaults.merchSpendPerGuest);
-  const [venueFeePercent, setVenueFeePercent] = useState(defaults.venueFeePercent);
-  const [venueCostFixed, setVenueCostFixed] = useState(defaults.venueCostFixed);
-  const [marketingCost, setMarketingCost] = useState(defaults.marketingCost);
-  const [crewCost, setCrewCost] = useState(defaults.crewCost);
+  
+  // State is stored as strings to provide a smoother input experience and prevent keyboard collapse.
+  const [ticketPrice, setTicketPrice] = useState(defaults.ticketPrice.toString());
+  const [venueCapacity, setVenueCapacity] = useState(defaults.venueCapacity.toString());
+  const [sellThroughRate, setSellThroughRate] = useState(defaults.sellThroughRate.toString());
+  const [merchSpendPerGuest, setMerchSpendPerGuest] = useState(defaults.merchSpendPerGuest.toString());
+  const [venueFeePercent, setVenueFeePercent] = useState(defaults.venueFeePercent.toString());
+  const [venueCostFixed, setVenueCostFixed] = useState(defaults.venueCostFixed.toString());
+  const [marketingCost, setMarketingCost] = useState(defaults.marketingCost.toString());
+  const [crewCost, setCrewCost] = useState(defaults.crewCost.toString());
+
+  // Defer calculation-heavy updates to keep the sliders and inputs responsive.
+  const deferredTicketPrice = useDeferredValue(ticketPrice);
+  const deferredVenueCapacity = useDeferredValue(venueCapacity);
+  const deferredSellThroughRate = useDeferredValue(sellThroughRate);
+  const deferredMerchSpendPerGuest = useDeferredValue(merchSpendPerGuest);
+  const deferredVenueFeePercent = useDeferredValue(venueFeePercent);
+  const deferredVenueCostFixed = useDeferredValue(venueCostFixed);
+  const deferredMarketingCost = useDeferredValue(marketingCost);
+  const deferredCrewCost = useDeferredValue(crewCost);
+
 
   const calculations = useMemo(() => {
-    const ticketsSold = Math.floor(venueCapacity * (sellThroughRate / 100));
-    const grossTicketRevenue = ticketsSold * ticketPrice;
-    const grossMerchRevenue = ticketsSold * merchSpendPerGuest;
+    const numTicketPrice = parseFloat(deferredTicketPrice) || 0;
+    const numVenueCapacity = parseFloat(deferredVenueCapacity) || 0;
+    const numSellThroughRate = parseFloat(deferredSellThroughRate) || 0;
+    const numMerchSpendPerGuest = parseFloat(deferredMerchSpendPerGuest) || 0;
+    const numVenueFeePercent = parseFloat(deferredVenueFeePercent) || 0;
+    const numVenueCostFixed = parseFloat(deferredVenueCostFixed) || 0;
+    const numMarketingCost = parseFloat(deferredMarketingCost) || 0;
+    const numCrewCost = parseFloat(deferredCrewCost) || 0;
+
+    const ticketsSold = Math.floor(numVenueCapacity * (numSellThroughRate / 100));
+    const grossTicketRevenue = ticketsSold * numTicketPrice;
+    const grossMerchRevenue = ticketsSold * numMerchSpendPerGuest;
     const totalGrossRevenue = grossTicketRevenue + grossMerchRevenue;
 
-    const venueCutCost = grossTicketRevenue * (venueFeePercent / 100);
-    const totalCosts = venueCutCost + venueCostFixed + marketingCost + crewCost;
+    const venueCutCost = grossTicketRevenue * (numVenueFeePercent / 100);
+    const totalCosts = venueCutCost + numVenueCostFixed + numMarketingCost + numCrewCost;
     
     const netProfit = totalGrossRevenue - totalCosts;
 
     return { ticketsSold, grossTicketRevenue, grossMerchRevenue, totalGrossRevenue, venueCutCost, totalCosts, netProfit };
-  }, [ticketPrice, venueCapacity, sellThroughRate, merchSpendPerGuest, venueFeePercent, venueCostFixed, marketingCost, crewCost]);
+  }, [deferredTicketPrice, deferredVenueCapacity, deferredSellThroughRate, deferredMerchSpendPerGuest, deferredVenueFeePercent, deferredVenueCostFixed, deferredMarketingCost, deferredCrewCost]);
 
-  const handleInputChange = (setter: React.Dispatch<React.SetStateAction<number>>) => (e: ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
-    setter(isNaN(value) ? 0 : value);
+  const handleInputChange = (setter: React.Dispatch<React.SetStateAction<string>>) => (e: ChangeEvent<HTMLInputElement>) => {
+    setter(e.target.value);
   };
   
   const InputRow: React.FC<{
     label: React.ReactNode;
     ariaLabel: string;
-    value: number;
+    value: string;
     onChange: (e: ChangeEvent<HTMLInputElement>) => void;
     min: number;
     max: number;
@@ -73,7 +94,7 @@ const TicketEstimator: React.FC<TicketEstimatorProps> = ({ data }) => {
           {unit === '$' && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/50">$</span>}
           <input
             type="number"
-            value={value || ''}
+            value={value}
             onChange={onChange}
             className={`w-28 rounded-md border-surface-border bg-background py-2 pr-3 text-foreground shadow-sm focus:border-[var(--brand-purple)] focus:ring-0 ${unit === '$' ? 'pl-6' : 'pl-3'}`}
             min={min}
@@ -100,7 +121,7 @@ const TicketEstimator: React.FC<TicketEstimatorProps> = ({ data }) => {
   const SimpleInputRow: React.FC<{
     label: string;
     id: string;
-    value: number;
+    value: string;
     onChange: (e: ChangeEvent<HTMLInputElement>) => void;
   }> = ({ label, id, value, onChange }) => (
      <div className="flex justify-between items-center">
@@ -110,7 +131,7 @@ const TicketEstimator: React.FC<TicketEstimatorProps> = ({ data }) => {
             <input
                 id={id}
                 type="number"
-                value={value || ''}
+                value={value}
                 onChange={onChange}
                 className="w-28 rounded-md border-surface-border bg-background py-2 pl-6 pr-3 text-foreground shadow-sm focus:border-[var(--brand-purple)] focus:ring-0"
                 placeholder="0"
@@ -139,7 +160,7 @@ const TicketEstimator: React.FC<TicketEstimatorProps> = ({ data }) => {
                         <div className="flex items-baseline gap-1.5">
                             <span>Sell-Through Rate</span>
                             <span className="font-normal text-xs text-foreground/70">
-                            (Est. {calculations.ticketsSold} Guests)
+                              (Est. {calculations.ticketsSold} Guests)
                             </span>
                         </div>
                         }
@@ -173,7 +194,7 @@ const TicketEstimator: React.FC<TicketEstimatorProps> = ({ data }) => {
         {/* Outputs Column */}
         <div className="space-y-4">
             <div className={`p-4 rounded-lg text-center ${calculations.netProfit >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
-                <h4 className="text-sm font-bold uppercase tracking-wider ${calculations.netProfit >= 0 ? 'text-green-800 dark:text-green-300' : 'text-red-800 dark:text-red-300'}">Projected Net Profit</h4>
+                <h4 className={`text-sm font-bold uppercase tracking-wider ${calculations.netProfit >= 0 ? 'text-green-800 dark:text-green-300' : 'text-red-800 dark:text-red-300'}`}>Projected Net Profit</h4>
                 <p className={`text-4xl font-extrabold my-2 ${calculations.netProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                     {formatCurrency(calculations.netProfit)}
                 </p>
@@ -202,20 +223,20 @@ const TicketEstimator: React.FC<TicketEstimatorProps> = ({ data }) => {
             <div className="bg-background p-4 rounded-lg space-y-3">
                 <h4 className="font-bold text-center text-foreground mb-2">Cost Breakdown</h4>
                 <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-foreground/80">Venue's Cut ({venueFeePercent}%)</span>
+                    <span className="text-sm font-medium text-foreground/80">Venue's Cut ({parseFloat(deferredVenueFeePercent) || 0}%)</span>
                     <span className="font-semibold text-foreground text-left">{formatCurrency(calculations.venueCutCost)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-foreground/80">Venue Cost (Fixed)</span>
-                    <span className="font-semibold text-foreground text-left">{formatCurrency(venueCostFixed)}</span>
+                    <span className="font-semibold text-foreground text-left">{formatCurrency(parseFloat(deferredVenueCostFixed) || 0)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-foreground/80">Marketing & Promotion</span>
-                    <span className="font-semibold text-foreground text-left">{formatCurrency(marketingCost)}</span>
+                    <span className="font-semibold text-foreground text-left">{formatCurrency(parseFloat(deferredMarketingCost) || 0)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-foreground/80">Crew & Staff</span>
-                    <span className="font-semibold text-foreground text-left">{formatCurrency(crewCost)}</span>
+                    <span className="font-semibold text-foreground text-left">{formatCurrency(parseFloat(deferredCrewCost) || 0)}</span>
                 </div>
                 <div className="border-t border-surface-border my-1"></div>
                  <div className="flex justify-between items-center">
